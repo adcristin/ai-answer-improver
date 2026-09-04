@@ -1,0 +1,6 @@
+# --- dotenv ---
+.env
+
+# --- claudeplans --- 
+*CLAUDE*
+*SPEC*
