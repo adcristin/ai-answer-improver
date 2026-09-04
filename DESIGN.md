@@ -33,7 +33,9 @@ This module encapsulates all communication with the OpenRouter API.
 - **Behavior**: 
   1. Loads `OPENROUTER_API_KEY` from `.env`.
   2. Sends a chat completion request using the system prompt from `prompts.py`.
-  3. Parses the response as JSON.
+  3. Parses the response as JSON:
+     - Uses `response_format={"type": "json_object"}` as the primary mechanism to ensure valid JSON.
+     - Implements a defensive fallback chain in `_parse_json_response` to handle rare cases of model misbehavior or markdown wrapping.
   4. Detects LLM-side validation errors (Gibberish/Language Mismatch) via specific JSON keys.
 
 ### `prompts.py`

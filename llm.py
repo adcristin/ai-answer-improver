@@ -7,7 +7,6 @@ from prompts import SYSTEM_PROMPT
 
 # Load environment variables from .env file
 load_dotenv()
-print(bool(os.getenv("OPENROUTER_API_KEY")))
 
 # --- Custom Exceptions ---
 
@@ -69,8 +68,12 @@ def improve_answer(question: str, answer: str) -> dict:
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": f"Question: {question}\n\nDraft Answer: {answer}"}
             ],
+            # Use OpenAI's structured-output mode to force the model to emit valid JSON.
+            # This is the primary guarantee for response structure.
             response_format={"type": "json_object"},
-            timeout=15.0
+            max_tokens=int(os.getenv("OPENROUTER_MAX_TOKENS", 1000)),
+            timeout=15.0,
+            extra_body={"reasoning": {"exclude": True}}
         )
     except OpenAI_RateLimitError:
         raise RateLimitError("AI service rate limit exceeded. Please try again later.")
@@ -101,8 +104,11 @@ def improve_answer(question: str, answer: str) -> dict:
 
 def _parse_json_response(content: str) -> dict:
     """
-    Parse the model's response into the expected JSON schema,
-    with fallbacks for markdown-wrapped or loosely-formed JSON.
+    Parse the model's response into the expected JSON schema.
+
+    While response_format={"type": "json_object"} provides a strong guarantee,
+    this function serves as a defensive fallback chain to handle rare cases
+    of model misbehavior, truncation, or unexpected markdown wrapping.
     """
     # 1. Happy path — model returned clean JSON
     try:
