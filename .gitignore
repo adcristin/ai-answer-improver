@@ -3,3 +3,6 @@
 
 # --- claudeplans --- 
 *CLAUDE*
+
+# --- pycache --- 
+__pycache__/

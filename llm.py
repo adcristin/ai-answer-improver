@@ -7,6 +7,7 @@ from prompts import SYSTEM_PROMPT
 
 # Load environment variables from .env file
 load_dotenv()
+print(bool(os.getenv("OPENROUTER_API_KEY")))
 
 # --- Custom Exceptions ---
 
@@ -63,7 +64,7 @@ def improve_answer(question: str, answer: str) -> dict:
         # OpenRouter supports standard OpenAI API.
         # The 'timeout' parameter in the create call ensures the 15s limit.
         response = client.chat.completions.create(
-            model="google/gemini-2.0-flash-001",
+            model=os.getenv("OPENROUTER_MODEL"),
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": f"Question: {question}\n\nDraft Answer: {answer}"}
@@ -85,7 +86,18 @@ def improve_answer(question: str, answer: str) -> dict:
         raise NetworkError(f"An unexpected error occurred: {str(e)}")
 
     content = response.choices[0].message.content or ""
-    return _parse_json_response(content)
+    result = _parse_json_response(content)
+
+    if "error" in result:
+        error_type = result["error"]
+        if error_type == "gibberish":
+            raise LLMValidationError("The provided answer seems nonsensical or contains only random characters. Please provide a valid text response.")
+        elif error_type == "language_mismatch":
+            raise LLMValidationError("The answer provided is in a different language than the question. Please ensure both are in the same language for best results.")
+        else:
+            raise LLMError(f"LLM validation error: {error_type}")
+
+    return result
 
 def _parse_json_response(content: str) -> dict:
     """
