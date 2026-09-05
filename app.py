@@ -3,11 +3,15 @@ import llm
 
 def validate_inputs(question, answer):
     """
-    Validates that the user has provided input.
+    Validates that the user has provided input according to SPEC.md.
     Returns (is_valid, error_message).
     """
-    if not question.strip() or not answer.strip():
-        return False, "Please fill in both fields before submitting."
+    if not question.strip():
+        return False, "Please enter the question you are answering."
+    if not answer.strip():
+        return False, "Please provide a draft answer to improve."
+    if len(answer) < 20:
+        return False, "Your answer is too short to provide a meaningful analysis. Please provide more detail."
 
     return True, None
 

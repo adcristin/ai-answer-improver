@@ -92,7 +92,24 @@ def improve_answer(question: str, answer: str) -> dict:
     result = _parse_json_response(content)
 
     if "error" in result:
-        error_type = result["error"]
+        error_val = result["error"]
+        # Handle cases where error is a string, a boolean (in a dict), or a simple key in the result
+        if isinstance(error_val, str):
+            error_type = error_val
+        elif isinstance(error_val, dict):
+            error_type = next((k for k, v in error_val.items() if v), None)
+        else:
+            # Fallback: if 'error' was just a key and the value is not a string/dict,
+            # check if the key itself is 'gibberish' or 'language_mismatch'
+            error_type = None
+
+        # Special check: if result is like {"gibberish": "gibberish"}, handle it
+        if not error_type:
+            if "gibberish" in result:
+                error_type = "gibberish"
+            elif "language_mismatch" in result:
+                error_type = "language_mismatch"
+
         if error_type == "gibberish":
             raise LLMValidationError("The provided answer seems nonsensical or contains only random characters. Please provide a valid text response.")
         elif error_type == "language_mismatch":
@@ -162,7 +179,7 @@ if __name__ == "__main__":
         }
     ]
 
-    print("🚀 Starting standalone tests for llm.py...")
+    print("Starting standalone tests for llm.py...")
     print("Note: Requires a valid OPENROUTER_API_KEY in .env\n")
 
     for i, case in enumerate(test_cases, 1):
