@@ -88,8 +88,20 @@ def improve_answer(question: str, answer: str) -> dict:
         # Catch-all for other unexpected errors during the request
         raise NetworkError(f"An unexpected error occurred: {str(e)}")
 
+    if not response.choices:
+        raise ParsingError("The AI service returned an empty response with no choices.")
+
     content = response.choices[0].message.content or ""
     result = _parse_json_response(content)
+
+    if result is None:
+        raise ParsingError("The AI service returned a null response.")
+
+    # Schema Validation: Ensure all required keys are present
+    required_keys = ["missing_points", "issues", "improved_answer"]
+    missing_keys = [key for key in required_keys if key not in result]
+    if missing_keys:
+        raise ParsingError(f"The AI response is missing required fields: {', '.join(missing_keys)}")
 
     if "error" in result:
         error_val = result["error"]

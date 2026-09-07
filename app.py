@@ -1,7 +1,8 @@
 import streamlit as st
 import llm
+from typing import Tuple, Optional
 
-def validate_inputs(question, answer):
+def validate_inputs(question: str, answer: str) -> Tuple[bool, Optional[str]]:
     """
     Validates that the user has provided input according to SPEC.md.
     Returns (is_valid, error_message).
@@ -10,12 +11,14 @@ def validate_inputs(question, answer):
         return False, "Please enter the question you are answering."
     if not answer.strip():
         return False, "Please provide a draft answer to improve."
-    if len(answer) < 20:
-        return False, "Your answer is too short to provide a meaningful analysis. Please provide more detail."
 
     return True, None
 
-def main():
+def main() -> None:
+    """
+    The main entry point for the AI Answer Improver application.
+    Handles UI layout, user input, and AI response orchestration.
+    """
     st.set_page_config(page_title="AI Answer Improver", page_icon="✍️")
 
     st.title("✍️ AI Answer Improver")
@@ -23,6 +26,18 @@ def main():
     Improve your academic or technical answers by identifying missing points,
     fixing issues, and generating a polished version.
     """)
+
+    with st.expander("💡 How to use this tool"):
+        st.markdown("""
+        1. **Enter the Question**: Paste the full prompt or question you are answering.
+        2. **Enter your Draft**: Provide your initial attempt at the answer.
+        3. **Click 'Improve Answer'**: The AI will analyze your draft for gaps and errors, then provide a rewritten version.
+
+        **Example:**
+        - *Question:* What is photosynthesis?
+        - *Draft Answer:* It's how plants make food using light.
+        - *AI Result:* Will suggest adding details about chlorophyll, carbon dioxide, and oxygen.
+        """)
 
     # Input Section
     with st.container():
@@ -46,23 +61,28 @@ def main():
                 # 3. Output Display
                 st.divider()
 
-                # Missing Points
-                st.subheader("🔍 Missing Points")
-                missing = result.get("missing_points", [])
-                if missing:
-                    for point in missing:
-                        st.markdown(f"- {point}")
-                else:
-                    st.success("Your answer is comprehensive! No critical points missing.")
+                # Analysis Dashboard
+                col1, col2 = st.columns(2)
 
-                # Issues
-                st.subheader("⚠️ Issues")
-                issues = result.get("issues", [])
-                if issues:
-                    for issue in issues:
-                        st.markdown(f"- {issue}")
-                else:
-                    st.success("No major issues found in your draft.")
+                with col1:
+                    st.subheader("🔍 Missing Points")
+                    missing = result.get("missing_points", [])
+                    if missing:
+                        for point in missing:
+                            st.markdown(f"- {point}")
+                    else:
+                        st.success("Your answer is comprehensive! No critical points missing.")
+
+                with col2:
+                    st.subheader("⚠️ Issues")
+                    issues = result.get("issues", [])
+                    if issues:
+                        for issue in issues:
+                            st.markdown(f"- {issue}")
+                    else:
+                        st.success("No major issues found in your draft.")
+
+                st.divider()
 
                 # Improved Answer
                 st.subheader("✨ Improved Answer")
@@ -77,7 +97,7 @@ def main():
             except llm.TimeoutError as e:
                 st.error("The AI is taking too long to respond. Please try again in a moment.")
             except llm.ParsingError as e:
-                st.error("The AI provided a response that couldn't be parsed. This can happen with very long answers.")
+                st.error(f"The AI provided a response that couldn't be parsed: {str(e)}")
             except llm.LLMValidationError as e:
                 st.error(str(e))
             except Exception as e:

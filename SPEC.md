@@ -47,7 +47,6 @@ The LLM must return a valid JSON object. To prevent UI crashes, the model is pro
 | :--- | :--- | :--- |
 | **Empty Question** | `if not question.strip():` | "Please enter the question you are answering." |
 | **Empty Answer** | `if not answer.strip():` | "Please provide a draft answer to improve." |
-| **Insufficient Detail** | `if len(answer) < 20:` | "Your answer is too short to provide a meaningful analysis. Please provide more detail." |
 | **Language Mismatch** | LLM-side detection | "The answer provided is in a different language than the question. Please ensure both are in the same language for best results." |
 | **Gibberish/Nonsense** | LLM-side detection | "The provided answer seems nonsensical or contains only random characters. Please provide a valid text response." |
 | **Code Content** | Support for Markdown | *No notification; system expects and preserves Markdown code blocks in the improved answer.* |
@@ -70,7 +69,7 @@ The LLM must return a valid JSON object. To prevent UI crashes, the model is pro
 | **Text Input** | Explicitly requires two text areas: one for the Question and one for the Draft Answer. |
 | **Meaningful AI Feature** | Implements automated gap analysis (missing points), error detection (issues), and content synthesis (improved answer). |
 | **Prompt-based Generation** | Utilizes a structured JSON prompt to ensure the LLM returns data in the exact schema required for the UI. |
-| **Input Validation** | Comprehensive rules for empty strings, minimum length, and nonsensical input. |
+| **Input Validation** | Comprehensive rules for empty strings and nonsensical input. |
 | **Error Handling** | Detailed recovery paths for timeouts, malformed responses, rate limits, and network failures. |
 | **Clear Output Display** | Structured output separated into distinct sections (Missing Points, Issues, Improved Answer) for readability. |
 | **Clean User Flow** | A linear, logical sequence from input to result, preventing processing until inputs are validated. |
