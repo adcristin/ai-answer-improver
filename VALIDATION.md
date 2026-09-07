@@ -74,3 +74,27 @@ This document contains the test cases derived from `SPEC.md` to ensure all valid
 - **Cause:** Nemotron 3.5 Lightning is a reasoning model; `response_format={"type":"json_object"}` did not reliably suppress its reasoning trace for longer/nuanced inputs, even after adding `extra_body={"reasoning":{"exclude": True}}`.
 - **Fix:** Switched `OPENROUTER_MODEL` to `nvidia/nemotron-3-ultra-550b-a55b:free`, a non-reasoning-leaking model. All 4 standalone test cases (short-correct, over-simplified, colloquial/incomplete, gibberish) passed cleanly.
 - **Status:** ✅ Resolved 
+
+### Issue 6 — 'NoneType' object is not subscriptable crash
+- **Input:** Various (observed during testing)
+- **Expected:** Graceful error handling for API failures
+- **Actual:** App crashed with `TypeError: 'NoneType' object is not subscriptable`
+- **Cause:** Occasional empty `choices` array in OpenRouter API response, causing `response.choices[0]` to fail.
+- **Fix:** Added guard clause `if not response.choices` in `llm.py` to raise `ParsingError` instead of crashing.
+- **Status:** ✅ Resolved
+
+### Issue 7 — Missing 'improved_answer' in AI response
+- **Input:** Question: "which item is a good source of protein?", Answer: "protein"
+- **Expected:** Full analysis including the improved answer
+- **Actual:** "No improved answer generated."
+- **Cause:** AI returned valid JSON but omitted the mandatory `improved_answer` key.
+- **Fix:** Added schema validation in `llm.py` to ensure all required keys are present; updated `SYSTEM_PROMPT` to explicitly mark all fields as mandatory.
+- **Status:** ✅ Resolved
+
+### Issue 8 — Potential JSON truncation due to model verbosity
+- **Input:** Complex questions/answers
+- **Expected:** Complete JSON response
+- **Actual:** `ParsingError` (due to cut-off JSON)
+- **Cause:** High verbosity of the model causing it to hit the 1,000 token limit before closing the JSON object.
+- **Fix:** Updated `SYSTEM_PROMPT` to enforce extreme conciseness and precision, ensuring responses fit well within the token limit.
+- **Status:** ✅ Resolved
